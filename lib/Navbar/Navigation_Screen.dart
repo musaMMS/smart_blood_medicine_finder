@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:smart_blood_medicine_finder/home/screens/Search_location_screen.dart';
-
-import '../home/screens/Donoate_screen.dart';
-import '../home/screens/Finde_Medicine_screen.dart';
-import '../home/screens/Request_blood_scrreen.dart';
+import 'package:smart_blood_medicine_finder/home/Medicine/Medicine_screen.dart';
+import 'package:smart_blood_medicine_finder/home/screens/Home_Screen.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({super.key});
@@ -16,10 +13,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    RequestBloodScreen(),
-    FindMedicineScreen(),
-    DonationHistoryScreen(),
-    SearchLocationScreen(),
+    HomeScreen(),
+    MedicineDetailsScreen(medicineName: '',),
+    Center(child: Text('Donation History Screen')), // placeholder
   ];
 
   void _onTabTapped(int index) {
@@ -32,7 +28,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
     'Request Blood',
     'Find Medicine',
     'Donation History',
-    'Donation History'
   ];
 
   @override
@@ -55,10 +50,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.history),
             label: 'History',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search_off_sharp),
-            label: 'Search',
           ),
         ],
       ),

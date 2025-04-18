@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:smart_blood_medicine_finder/Navbar/Navigation_Screen.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(seconds: 2), () {
+      // After splash, navigate to RegisterScreen or HomeScreen
+      Navigator.pushReplacementNamed(context, '/reg');  // Or use '/home' if needed
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,17 +35,11 @@ class SplashScreen extends StatelessWidget {
               Container(
                 height: 150,
                 width: 150,
-                color: Colors.grey[300], // Placeholder for image
+                color: Colors.grey[300],
                 child: const Icon(Icons.bloodtype, size: 60),
               ),
               const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: () {
-                  // Navigate to next screen
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>NavigationScreen()));
-                },
-                child: const Text('GET STARTED'),
-              ),
+              const CircularProgressIndicator(),
             ],
           ),
         ),
