@@ -1,9 +1,13 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../Phone_auth/viewcooection_screen.dart';
 import '../donation/AddDonation_Screen.dart';
 import '../donation/Donar_history_view.dart';
+import 'ViewRequestScreen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -93,6 +97,27 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Connect function
+  void sendConnectionRequest(String userId) async {
+    try {
+      await FirebaseFirestore.instance.collection('requests').add({
+        'userId': userId,
+        'message': 'Request for Blood Donation',
+        'status': 'pending', // status can be 'pending', 'approved', 'rejected'
+        'createdAt': Timestamp.now(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Request sent successfully!')),
+      );
+    } catch (e) {
+      debugPrint('❌ Error sending request: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Error sending request. Please try again.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,23 +135,43 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (userName != null)
-                  Container(
-                    width: 200, // Set a fixed width to create a box-like effect
-                    child: Card(
-                      color: Colors.red[50],
-                      elevation: 3,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: ListTile(
-                        leading: const Icon(Icons.person, color: Colors.redAccent),
-                        title: Text(
-                          '👋 Hello, $userName!',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 250,
+                        child: Card(
+                          color: Colors.red[50],
+                          elevation: 3,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: ListTile(
+                            leading: const Icon(Icons.person, color: Colors.redAccent),
+                            title: Text(
+                              '👋 Hello, $userName!',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18),
+                            ),
+                            subtitle: Text(
+                              'Welcome to the app!',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ViewConnectionsScreen(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.notifications_active_rounded),
+                      ),
+                    ],
                   ),
-                // 🔽 UI content starts from here (no need to show name again)
+
                 TextField(
                   controller: cityController,
                   decoration: const InputDecoration(
@@ -136,8 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   value: selectedBloodGroup,
-                  decoration: const InputDecoration(
-                      labelText: 'Select Blood Group'),
+                  decoration: const InputDecoration(labelText: 'Select Blood Group'),
                   items: bloodGroups.map((String bg) {
                     return DropdownMenuItem(value: bg, child: Text(bg));
                   }).toList(),
@@ -156,8 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 10),
                 Expanded(
                   child: searchResults.isEmpty
-                      ? const Center(
-                      child: Text('🔍 Search results will appear here.'))
+                      ? const Center(child: Text('🔍 Search results will appear here.'))
                       : ListView.builder(
                     itemCount: searchResults.length,
                     itemBuilder: (context, index) {
@@ -168,25 +211,31 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: ListTile(
                           title: Text(user['name'] ?? 'No name'),
                           subtitle: Text(
-                            '📍 ${user['city'] ?? ''} | 🩸 ${user['bloodGroup'] ??
-                                ''}',
+                            '📍 ${user['city'] ?? ''} | 🩸 ${user['bloodGroup'] ?? ''}',
                           ),
-                          trailing: Text('📞 ${user['phone'] ?? ''}'),
+                          // trailing: Text('📞 ${user['phone'] ?? ''}'),
+                          // Connect Button
+                          trailing: IconButton(
+                            icon: const Icon(Icons.person_add),
+                            onPressed: () {
+                              sendConnectionRequest(user['userId']);
+                            },
+                          ),
                         ),
                       );
                     },
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                Wrap(
+                  alignment: WrapAlignment.spaceAround,
+                  spacing: 10,
                   children: [
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                AddDonationScreen(donorId: ''),
+                            builder: (context) => AddDonationScreen(donorId: ''),
                           ),
                         );
                       },
@@ -197,18 +246,32 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                DonorHistoryScreen(donorId: ''),
+                            builder: (context) => DonorHistoryScreen(donorId: ''),
                           ),
                         );
                       },
                       child: const Text('View History'),
+                    ),
+                    ElevatedButton.icon(
+                      icon: Icon(Icons.add_alert),
+                      label: Text("Request Blood"),
+                      onPressed: () => const AddDonationScreen(donorId: '',),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ViewRequestsScreen()),
+                        );
+                      },
+                      child: Text("📢 View Requests"),
                     ),
                   ],
                 ),
               ],
             ),
           ),
+
           if (isLoading)
             Container(
               color: Colors.black.withOpacity(0.4),
@@ -230,4 +293,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  void getFCMToken() async {
+    String? token = await FirebaseMessaging.instance.getToken();
+    print('📲 Device Token: $token');
+  }
+
 }
