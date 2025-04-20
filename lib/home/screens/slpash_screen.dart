@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -11,38 +13,29 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 2), () {
-      // After splash, navigate to RegisterScreen or HomeScreen
-      Navigator.pushReplacementNamed(context, '/reg');  // Or use '/home' if needed
-    });
+    _navigateUser();
+  }
+
+  void _navigateUser() async {
+    await Future.delayed(const Duration(seconds: 3));
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      // ✅ Already logged in
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      // ⛔ Not logged in
+      Navigator.pushReplacementNamed(context, '/login');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'SMART BLOOD & MEDICINE FINDER',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 30),
-              Container(
-                height: 150,
-                width: 150,
-                color: Colors.grey[300],
-                child: const Icon(Icons.bloodtype, size: 60),
-              ),
-              const SizedBox(height: 30),
-              const CircularProgressIndicator(),
-            ],
-          ),
-        ),
+        child: CircularProgressIndicator(), // অথবা তোমার লোগো/অ্যানিমেশন
       ),
     );
   }

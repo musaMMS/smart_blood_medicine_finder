@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../donation/AddDonation_Screen.dart';
+import '../donation/Donar_history_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? selectedBloodGroup;
   List<Map<String, dynamic>> searchResults = [];
   bool isLoading = false;
+  String? userName;
 
   final List<String> bloodGroups = [
     'A+',
@@ -25,13 +30,27 @@ class _HomeScreenState extends State<HomeScreen> {
     'AB-',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    loadUserName();
+  }
+
+  Future<void> loadUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('userName');
+    });
+  }
+
   void searchUsers() async {
     final String city = cityController.text.trim();
     final String? bloodGroup = selectedBloodGroup;
 
     if (city.isEmpty || bloodGroup == null || bloodGroup.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❗ Please enter both city and blood group')),
+        const SnackBar(
+            content: Text('❗ Please enter both city and blood group')),
       );
       return;
     }
@@ -58,7 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (results.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No donors found in "$city" with blood group "$bloodGroup"')),
+          SnackBar(content: Text(
+              'No donors found in "$city" with blood group "$bloodGroup"')),
         );
       }
     } catch (e) {
@@ -76,12 +96,37 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // appBar: AppBar(
+      //   title: userName != null
+      //       ? Text('👋 Hello, $userName')
+      //       : const Text('Smart Blood Finder'),
+      //   backgroundColor: Colors.redAccent,
+      // ),
       body: Stack(
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (userName != null)
+                  Container(
+                    width: 200, // Set a fixed width to create a box-like effect
+                    child: Card(
+                      color: Colors.red[50],
+                      elevation: 3,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: ListTile(
+                        leading: const Icon(Icons.person, color: Colors.redAccent),
+                        title: Text(
+                          '👋 Hello, $userName!',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                      ),
+                    ),
+                  ),
+                // 🔽 UI content starts from here (no need to show name again)
                 TextField(
                   controller: cityController,
                   decoration: const InputDecoration(
@@ -91,7 +136,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   value: selectedBloodGroup,
-                  decoration: const InputDecoration(labelText: 'Select Blood Group'),
+                  decoration: const InputDecoration(
+                      labelText: 'Select Blood Group'),
                   items: bloodGroups.map((String bg) {
                     return DropdownMenuItem(value: bg, child: Text(bg));
                   }).toList(),
@@ -110,7 +156,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 10),
                 Expanded(
                   child: searchResults.isEmpty
-                      ? const Center(child: Text('🔍 Search results will appear here.'))
+                      ? const Center(
+                      child: Text('🔍 Search results will appear here.'))
                       : ListView.builder(
                     itemCount: searchResults.length,
                     itemBuilder: (context, index) {
@@ -121,13 +168,43 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: ListTile(
                           title: Text(user['name'] ?? 'No name'),
                           subtitle: Text(
-                            '📍 ${user['city'] ?? ''} | 🩸 ${user['bloodGroup'] ?? ''}',
+                            '📍 ${user['city'] ?? ''} | 🩸 ${user['bloodGroup'] ??
+                                ''}',
                           ),
                           trailing: Text('📞 ${user['phone'] ?? ''}'),
                         ),
                       );
                     },
                   ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AddDonationScreen(donorId: ''),
+                          ),
+                        );
+                      },
+                      child: const Text('Add Donation'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                DonorHistoryScreen(donorId: ''),
+                          ),
+                        );
+                      },
+                      child: const Text('View History'),
+                    ),
+                  ],
                 ),
               ],
             ),

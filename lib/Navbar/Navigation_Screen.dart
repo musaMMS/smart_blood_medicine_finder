@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:smart_blood_medicine_finder/home/Medicine/Medicine_screen.dart';
+import 'package:smart_blood_medicine_finder/home/donation/AddDonation_Screen.dart';
 import 'package:smart_blood_medicine_finder/home/screens/Home_Screen.dart';
+
+import '../home/Medicine/medicin_search_screen.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({super.key});
@@ -14,8 +17,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   final List<Widget> _screens = [
     HomeScreen(),
-    MedicineDetailsScreen(medicineName: '',),
-    Center(child: Text('Donation History Screen')), // placeholder
+    SearchMedicineScreen(),
+    AddDonationScreen(donorId: '') // placeholder
   ];
 
   void _onTabTapped(int index) {
@@ -33,7 +36,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_selectedIndex])),
+      // appBar: AppBar(title: Text(_titles[_selectedIndex])),
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,

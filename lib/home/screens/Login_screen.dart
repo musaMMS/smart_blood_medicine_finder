@@ -46,18 +46,18 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<bool> _onWillPop() async {
-    // Navigate back to RegisterScreen
-    Navigator.pushReplacementNamed(context, '/register');
-    return false; // Prevent default back navigation
-  }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        appBar: AppBar(title: Text('Login')),
+    return  Scaffold(
+        appBar: AppBar(title: Text('Login'),
+            leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pushReplacementNamed(context, '/');
+        },
+      ),
+        ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Form(
@@ -81,7 +81,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
