@@ -4,6 +4,7 @@ import 'package:smart_blood_medicine_finder/home/Medicine/Medicine_screen.dart';
 import 'package:smart_blood_medicine_finder/home/donation/AddDonation_Screen.dart';
 import 'package:smart_blood_medicine_finder/home/screens/Home_Screen.dart';
 
+import '../Phone_auth/SendConnectRequestScreen.dart';
 import '../home/Medicine/medicin_search_screen.dart';
 
 class NavigationScreen extends StatefulWidget {
@@ -19,7 +20,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
   final List<Widget> _screens = [
     HomeScreen(),
     SearchMedicineScreen(),
-    AddDonationScreen(donorId: '') ,// placeholder
+    // AddDonationScreen(donorId: '') ,// placeholder
+    SendConnectRequestScreen(),
   ];
 
   void _onTabTapped(int index) {

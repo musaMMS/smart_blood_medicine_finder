@@ -34,7 +34,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // 🔹 Save name to SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('userName', name);
+      await prefs.setString('userPhone', phone); // ✅ add this line
       debugPrint("✅ Saved to SharedPreferences");
+
 
       // 🔹 Save user to Firestore
       await FirebaseFirestore.instance.collection('users').add({

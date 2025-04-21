@@ -2,12 +2,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../Phone_auth/viewcooection_screen.dart';
 import '../donation/AddDonation_Screen.dart';
 import '../donation/Donar_history_view.dart';
 import 'ViewRequestScreen.dart';
-
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // 1. User Search Function
   void searchUsers() async {
     final String city = cityController.text.trim();
     final String? bloodGroup = selectedBloodGroup;
@@ -97,36 +96,72 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Connect function
-  void sendConnectionRequest(String userId) async {
+  // 2. Send Connection Request Function
+  void sendConnectionRequest(Map<String, dynamic> user) async {
     try {
-      await FirebaseFirestore.instance.collection('requests').add({
-        'userId': userId,
-        'message': 'Request for Blood Donation',
-        'status': 'pending', // status can be 'pending', 'approved', 'rejected'
-        'createdAt': Timestamp.now(),
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? senderPhone = prefs.getString('userPhone');
+      String? senderName = prefs.getString('userName');
+      String? senderBloodGroup = prefs.getString('bloodGroup');
+
+      if (senderPhone == null || senderName == null || senderBloodGroup == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("❗ Sender info missing.")),
+        );
+        return;
+      }
+
+      // 1. Firestore এ Request সংরক্ষণ
+      await FirebaseFirestore.instance.collection('connections').add({
+        'senderName': senderName,
+        'senderPhone': senderPhone,
+        'senderBloodGroup': senderBloodGroup,
+        'receiverPhone': user['phone'],
+        'timestamp': Timestamp.now(),
       });
+
+      // 2. Notification পাঠানো (FCM)
+      if (user['fcmToken'] != null) {
+        await sendPushNotification(
+          token: user['fcmToken'],
+          title: '🩸 Blood Connect Request',
+          body: '$senderName sent you a blood donation request.',
+        );
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Request sent successfully!')),
       );
     } catch (e) {
-      debugPrint('❌ Error sending request: $e');
+      debugPrint('❌ Error sending connection request: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Error sending request. Please try again.')),
+        const SnackBar(content: Text('❌ Failed to send request.')),
       );
+    }
+  }
+
+  // 3. Push Notification Function
+  Future<void> sendPushNotification({
+    required String token,
+    required String title,
+    required String body,
+  }) async {
+    try {
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'token': token,
+        'title': title,
+        'body': body,
+        'timestamp': Timestamp.now(),
+      });
+      // তোমার Node.js server বা Firebase Functions ব্যবহার করে FCM পাঠাতে হবে
+    } catch (e) {
+      debugPrint('❌ Error sending FCM: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: userName != null
-      //       ? Text('👋 Hello, $userName')
-      //       : const Text('Smart Blood Finder'),
-      //   backgroundColor: Colors.redAccent,
-      // ),
       body: Stack(
         children: [
           Padding(
@@ -213,12 +248,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           subtitle: Text(
                             '📍 ${user['city'] ?? ''} | 🩸 ${user['bloodGroup'] ?? ''}',
                           ),
-                          // trailing: Text('📞 ${user['phone'] ?? ''}'),
-                          // Connect Button
                           trailing: IconButton(
                             icon: const Icon(Icons.person_add),
                             onPressed: () {
-                              sendConnectionRequest(user['userId']);
+                              sendConnectionRequest(user);
                             },
                           ),
                         ),
@@ -298,5 +331,4 @@ class _HomeScreenState extends State<HomeScreen> {
     String? token = await FirebaseMessaging.instance.getToken();
     print('📲 Device Token: $token');
   }
-
 }
